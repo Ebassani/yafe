@@ -17,6 +17,7 @@ impl fmt::Display for FileError {
     }
 }
 
+// Without this Tauri doesn't accept the error. Could I just return a string instead of this error? Yes, but I like the abstraction
 impl From<FileError> for InvokeError {
     fn from(err: FileError) -> Self {
         InvokeError::from(err.to_string())
