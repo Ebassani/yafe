@@ -1,51 +1,58 @@
-use std::fs::{read_dir, FileType};
-use std::time::{SystemTime, UNIX_EPOCH};
-use serde::Serialize;
 use crate::directory::DirFileType::{Dir, File, Symlink};
+use serde::Serialize;
+use std::fs::{FileType, read_dir};
+use std::time::{SystemTime, UNIX_EPOCH};
 
-pub(crate) fn read_directory(path: &str) -> Result<Vec<FileInfo>, FileError> {
-    let dir = read_dir(path).map_err(|message| FileError::DirError(message.to_string()))?;
+pub(crate) fn read_directory(dir_path: &str) -> Result<Vec<FileInfo>, FileError> {
+    let dir = read_dir(dir_path).map_err(|message| FileError::DirError(message.to_string()))?;
 
-    let info: Result<Vec<FileInfo>, FileError> = dir.map(|dir_item|  {
-        let file = dir_item.map_err(|some_err| FileError::DirError(some_err.to_string()))?;
+    let info: Result<Vec<FileInfo>, FileError> = dir
+        .map(|dir_item| {
+            let file = dir_item.map_err(|some_err| FileError::DirError(some_err.to_string()))?;
 
-        let metadata = file.metadata().map_err(|err| FileError::MetadataError(err.to_string()))?;
+            let metadata = file
+                .metadata()
+                .map_err(|err| FileError::MetadataError(err.to_string()))?;
 
-        let file_metadata = FileMetadata {
+            let file_metadata = FileMetadata {
                 len: metadata.len(),
                 accessed: metadata.accessed().ok().and_then(system_time_to_u64),
                 created: metadata.created().ok().and_then(system_time_to_u64),
                 file_type: DirFileType::from_file_type(metadata.file_type()),
                 modified: metadata.modified().ok().and_then(system_time_to_u64),
                 read_only: metadata.permissions().readonly(),
-        };
+            };
 
+            let file_name = file.file_name().to_string_lossy().to_string();
+            let path = file.path().to_string_lossy().to_string();
 
-        let path = file.path();
-
-        let file_name = match path.file_name() {
-            None => {String::from("Name not found")}
-            Some(name) => {name.to_string_lossy().to_string()}
-        };
-
-
-        Ok(FileInfo {
-            file_name,
-            file_metadata
+            Ok(FileInfo {
+                path,
+                file_name,
+                file_metadata,
+            })
         })
-    }).collect();
+        .collect();
 
     info
 }
 
 #[derive(Serialize, Clone, Eq, PartialEq)]
 pub(crate) enum DirFileType {
-    Dir, File, Symlink
+    Dir,
+    File,
+    Symlink,
 }
 
 impl DirFileType {
     pub(crate) fn from_file_type(file_type: FileType) -> Self {
-        if file_type.is_file() { File } else if file_type.is_dir() { Dir } else { Symlink }
+        if file_type.is_file() {
+            File
+        } else if file_type.is_dir() {
+            Dir
+        } else {
+            Symlink
+        }
     }
 }
 
@@ -61,14 +68,15 @@ pub(crate) struct FileMetadata {
 
 #[derive(Serialize, Clone)]
 pub(crate) struct FileInfo {
+    pub(crate) path: String,
     pub(crate) file_name: String,
-    pub(crate) file_metadata: FileMetadata
+    pub(crate) file_metadata: FileMetadata,
 }
 
 pub(crate) enum FileError {
     MetadataError(String),
     PathBuf(String),
-    DirError(String)
+    DirError(String),
 }
 
 fn system_time_to_u64(time: SystemTime) -> Option<u64> {
