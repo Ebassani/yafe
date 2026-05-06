@@ -1,5 +1,3 @@
-use crate::directory::{read_directory};
-
 mod directory;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/

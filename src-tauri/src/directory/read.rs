@@ -1,7 +1,7 @@
-use crate::directory::DirFileType::{Dir, File, Symlink};
-use serde::Serialize;
-use std::fs::{FileType, read_dir};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::fs::read_dir;
+use crate::directory::errors::FileError;
+use crate::directory::types::{DirFileType, FileInfo, FileMetadata};
+use crate::directory::utils::system_time_to_u64;
 
 pub(crate) fn read_directory(dir_path: &str) -> Result<Vec<FileInfo>, FileError> {
     let dir = read_dir(dir_path).map_err(|message| FileError::DirError(message.to_string()))?;
@@ -35,50 +35,4 @@ pub(crate) fn read_directory(dir_path: &str) -> Result<Vec<FileInfo>, FileError>
         .collect();
 
     info
-}
-
-#[derive(Serialize, Clone, Eq, PartialEq)]
-pub(crate) enum DirFileType {
-    Dir,
-    File,
-    Symlink,
-}
-
-impl DirFileType {
-    pub(crate) fn from_file_type(file_type: FileType) -> Self {
-        if file_type.is_file() {
-            File
-        } else if file_type.is_dir() {
-            Dir
-        } else {
-            Symlink
-        }
-    }
-}
-
-#[derive(Serialize, Clone, Eq, PartialEq)]
-pub(crate) struct FileMetadata {
-    pub(crate) len: u64,
-    pub(crate) accessed: Option<u64>,
-    pub(crate) created: Option<u64>,
-    pub(crate) file_type: DirFileType,
-    pub(crate) modified: Option<u64>,
-    pub(crate) read_only: bool,
-}
-
-#[derive(Serialize, Clone)]
-pub(crate) struct FileInfo {
-    pub(crate) path: String,
-    pub(crate) file_name: String,
-    pub(crate) file_metadata: FileMetadata,
-}
-
-pub(crate) enum FileError {
-    MetadataError(String),
-    PathBuf(String),
-    DirError(String),
-}
-
-fn system_time_to_u64(time: SystemTime) -> Option<u64> {
-    time.duration_since(UNIX_EPOCH).ok().map(|d| d.as_secs())
 }
