@@ -31,7 +31,7 @@ pub(crate) fn list(dir_path: &str) -> Result<Vec<FileInfo>, FileError> {
     info
 }
 
-pub(crate) fn read_metadata(path: &str) -> Result<FileInfo, FileError> {
+pub(crate) fn read(path: &str) -> Result<FileInfo, FileError> {
     let metadata = fs::symlink_metadata(path).map_err(|err| FileError::MetadataError(err.to_string()))?;
 
     let file_name = Path::new(path)
