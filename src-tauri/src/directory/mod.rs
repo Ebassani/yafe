@@ -1,7 +1,9 @@
-pub(crate) mod types;
-pub(crate) mod errors;
+pub(crate) mod file_info;
+pub(crate) mod error;
 
-pub(crate) mod utils;
-
-pub(crate) mod read;
+pub(crate) mod directory;
 pub(crate) mod commands;
+
+pub(crate) use directory::*;
+pub(crate) use file_info::*;
+pub(crate) use commands::*;

@@ -1,10 +1,10 @@
-use crate::directory::errors::FileError;
-use crate::directory::read::read_directory;
-use crate::directory::types::FileInfo;
+use crate::directory::error::FileError;
+use crate::directory::directory::list;
+use crate::directory::file_info::FileInfo;
 
 #[tauri::command]
-pub async fn read_dir(path: String) -> Result<Vec<FileInfo>, FileError> {
-    tokio::task::spawn_blocking(move || read_directory(&path))
+pub async fn list_directory(path: String) -> Result<Vec<FileInfo>, FileError> {
+    tokio::task::spawn_blocking(move || list(&path))
         .await
         .map_err(|err| FileError::DirError(err.to_string()))
         .map_err(|err| FileError::DirError(err.to_string()))?
