@@ -1,6 +1,4 @@
-use crate::directory::error::FileError;
-use crate::directory::directory::list;
-use crate::directory::file_info::FileInfo;
+use crate::directory::{list, FileError, FileInfo};
 
 #[tauri::command]
 pub async fn list_directory(path: String) -> Result<Vec<FileInfo>, FileError> {

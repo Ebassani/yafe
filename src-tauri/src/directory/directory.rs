@@ -2,9 +2,7 @@ use std::path::Path;
 use std::fs;
 use std::fs::{read_dir, Metadata};
 use std::time::{SystemTime, UNIX_EPOCH};
-use crate::directory::error::FileError;
-use crate::directory::file_info::{DirFileType, FileInfo, FileMetadata};
-
+use crate::directory::{DirFileType, FileError, FileInfo, FileMetadata};
 
 pub(crate) fn list(dir_path: &str) -> Result<Vec<FileInfo>, FileError> {
     let dir = read_dir(dir_path).map_err(|message| FileError::DirError(message.to_string()))?;

@@ -7,3 +7,4 @@ pub(crate) mod commands;
 pub(crate) use directory::*;
 pub(crate) use file_info::*;
 pub(crate) use commands::*;
+pub(crate) use error::*;
