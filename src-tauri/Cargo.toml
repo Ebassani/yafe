@@ -22,3 +22,4 @@ tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 tokio = "1.52.2"
+directories = "6.0.0"
