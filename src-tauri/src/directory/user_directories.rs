@@ -1,7 +1,18 @@
 extern crate directories;
-
 use std::path::Path;
 use directories::UserDirs;
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Serialize, Deserialize)]
+pub(crate) enum UserDirType {
+    Home, Desktop, Downloads, Documents, Pictures, Videos
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub(crate) struct UserDir {
+    pub(crate) user_dir_type: UserDirType,
+    pub(crate) dir_path: String
+}
 
 pub(crate) fn list_user_dirs() -> Vec<UserDir> {
     let mut user_directories: Vec<UserDir> = Vec::new();
@@ -25,13 +36,4 @@ pub(crate) fn list_user_dirs() -> Vec<UserDir> {
     }
 
     user_directories
-}
-
-pub(crate) enum UserDirType {
-    Home, Desktop, Downloads, Documents, Pictures, Videos
-}
-
-pub(crate) struct UserDir {
-    user_dir_type: UserDirType,
-    dir_path: String
 }

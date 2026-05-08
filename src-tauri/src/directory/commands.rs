@@ -1,4 +1,4 @@
-use crate::directory::{list, read, FileError, FileInfo};
+use crate::directory::{list, list_user_dirs, read, FileError, FileInfo, UserDir};
 
 #[tauri::command]
 pub async fn list_directory(path: String) -> Result<Vec<FileInfo>, FileError> {
@@ -6,6 +6,13 @@ pub async fn list_directory(path: String) -> Result<Vec<FileInfo>, FileError> {
         .await
         .map_err(|err| FileError::DirError(err.to_string()))
         .map_err(|err| FileError::DirError(err.to_string()))?
+}
+
+#[tauri::command]
+pub async fn list_user_directories() -> Result<Vec<UserDir>, FileError> {
+    tokio::task::spawn_blocking(list_user_dirs)
+        .await
+        .map_err(|err| FileError::DirError(err.to_string()))
 }
 
 #[tauri::command]
