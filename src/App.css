@@ -1,5 +1,32 @@
 @import "tailwindcss";
 
+@theme {
+  --color-main-bg: #181818;
+  --color-app-rail: #1f1f1f;
+  --color-panel-bg: #232323;
+  --color-panel-soft: #2a2a2a;
+  --color-panel-muted: #333333;
+  --color-line-soft: #3a3a3a;
+  --color-line-muted: #2d2d2d;
+  --color-text-main: #f4f4f4;
+  --color-text-soft: #d0d0d0;
+  --color-text-muted: #a4a4a4;
+  --color-text-faint: #747474;
+  --color-accent: #7fb88a;
+  --color-accent-strong: #9bd3a5;
+  --color-accent-soft: #26352a;
+  --color-accent-muted: #477453;
+  --color-danger-soft: #3d2020;
+  --color-danger-line: #7f2f2f;
+  --color-danger-text: #f0a2a2;
+  --color-warn-soft: #3a301f;
+  --color-warn-line: #80612a;
+  --color-warn-text: #e0c174;
+  --color-scroll-thumb: #4b7354;
+  --color-scroll-thumb-hover: #79ad83;
+  --color-scroll-track: transparent;
+}
+
 .logo.vite:hover {
   filter: drop-shadow(0 0 2em #747bff);
 }
@@ -62,41 +89,6 @@ h1 {
   text-align: center;
 }
 
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
 @media (prefers-color-scheme: dark) {
   :root {
     color: #f6f6f6;
@@ -105,14 +97,5 @@ button {
 
   a:hover {
     color: #24c8db;
-  }
-
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-  button:active {
-    background-color: #0f0f0f69;
   }
 }
