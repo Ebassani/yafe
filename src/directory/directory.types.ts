@@ -21,3 +21,10 @@ export interface UserDir {
 }
 
 export type UserDirType = 'Home' | 'Desktop' | 'Downloads' | 'Documents' | 'Pictures' | 'Videos';
+
+export type FileErrorType = 'Metadata' | 'Directory' | 'Path';
+
+export interface FileError {
+    errorType: FileErrorType,
+    message: string
+}
