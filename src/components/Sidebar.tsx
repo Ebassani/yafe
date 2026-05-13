@@ -57,9 +57,9 @@ export function Sidebar(
                         <PanelLeftClose className="h-3.5 w-3.5"/>
                     </button>
 
-                <div className="min-h-0 flex-1 overflow-y-auto p-3">
+                <div className="min-h-0 flex-1 flex flex-col overflow-y-auto p-3">
                     {userDirs.map(directory => (
-                        <span>{directory.user_dir_type}</span>
+                        <SidebarItem directory={directory} />
                     ))}
                 </div>
 
@@ -73,4 +73,16 @@ export function Sidebar(
             </aside>
         </>
     );
+}
+
+interface SidebarItemProps {
+    directory: UserDir
+}
+
+function SidebarItem({directory}: SidebarItemProps) {
+    return (
+        <div className={`p-1 bg-panel-muted m-0.5`}>
+            {directory.user_dir_type}
+        </div>
+    )
 }
