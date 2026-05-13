@@ -1,22 +1,38 @@
-import {useState} from "react";
 import reactLogo from "./assets/react.svg";
 import "./App.css";
-import {listUserDirectories} from "./directory";
+import {listUserDirectories, UserDir} from "./directory";
+import {useEffect, useState} from "react";
+import { Sidebar } from "./components/Sidebar";
 
 function App() {
-    const [greetMsg, setGreetMsg] = useState("");
-    const [name, setName] = useState("");
+    const [userDirectories, setUserDirectories] = useState<UserDir[]>([]);
+    const [error, setError] = useState<string | undefined>(undefined)
 
-    async function greet() {
+    useEffect(() => {
+        try {
+            const fetchDirectories = async () => {
+                const dir = await listUserDirectories();
 
-        const dir = await listUserDirectories();
-        console.log(dir)
-        setGreetMsg('Hi');
-    }
+                setUserDirectories(dir);
+            }
+
+            fetchDirectories().then();
+        } catch (e) {
+            setError(String(e))
+        }
+    }, [])
 
     return (
         <main className="container">
             <h1>Welcome to Tauri + React</h1>
+
+            {error && (
+                <span>{error}</span>
+            )}
+
+            {userDirectories.length > 0 && (
+                <Sidebar userDirs={userDirectories} />
+            )}
 
             <div className="row">
                 <a href="https://vite.dev" target="_blank">
@@ -30,22 +46,6 @@ function App() {
                 </a>
             </div>
             <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-            <form
-                className="row"
-                onSubmit={(e) => {
-                    e.preventDefault();
-                    greet();
-                }}
-            >
-                <input
-                    id="greet-input"
-                    onChange={(e) => setName(e.currentTarget.value)}
-                    placeholder="Enter a name..."
-                />
-                <button type="submit">Greet</button>
-            </form>
-            <p>{greetMsg}</p>
         </main>
     );
 }
