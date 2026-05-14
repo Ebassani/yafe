@@ -2,9 +2,10 @@ use std::path::Path;
 use std::fs;
 use std::fs::{read_dir, Metadata};
 use std::time::{SystemTime, UNIX_EPOCH};
-use crate::directory::{DirFileType, FileError, FileInfo, FileMetadata};
+use tauri::ipc::Channel;
+use crate::directory::{DirFileType, DirectoryStreamEvent, FileError, FileInfo, FileMetadata};
 
-pub(crate) fn list(dir_path: &str) -> Result<Vec<FileInfo>, FileError> {
+pub(crate) fn list(dir_path: String) -> Result<Vec<FileInfo>, FileError> {
     let dir = read_dir(dir_path).map_err(|message| FileError::directory(message.to_string()))?;
 
     let info: Result<Vec<FileInfo>, FileError> = dir
@@ -29,6 +30,43 @@ pub(crate) fn list(dir_path: &str) -> Result<Vec<FileInfo>, FileError> {
         .collect();
 
     info
+}
+
+const BATCH_SIZE: usize = 10;
+
+pub(crate) fn list_streamed(dir_path: String, request_id: String, on_event: Channel<DirectoryStreamEvent>) -> Result<(), FileError> {
+    on_event.send(DirectoryStreamEvent::Start {
+        path: dir_path.clone(),
+        request_id: request_id.clone()
+    }).map_err(|message| FileError::directory(message.to_string()))?;
+
+    let dir = read_dir(&dir_path).map_err(|message| FileError::directory(message.to_string()))?;
+
+    let mut batch: Vec<FileInfo> = Vec::with_capacity(BATCH_SIZE);
+    let mut sequence = 0;
+    let mut total = 0;
+
+    for dir_item in dir {
+        let entry = match dir_item {
+            Ok(entry) => entry,
+            Err(err) => {
+                on_event.send(DirectoryStreamEvent::Error {
+                    request_id: request_id.clone(),
+                    path: dir_path.clone(),
+                    message: err.to_string()
+                }).map_err(|send_err| FileError::directory(send_err.to_string()))?;
+                continue
+            },
+        };
+    }
+
+    on_event.send(DirectoryStreamEvent::Complete {
+        request_id,
+        path: dir_path,
+        total,
+    }).map_err(|message| FileError::directory(message.to_string()))?;
+
+    Ok(())
 }
 
 pub(crate) fn read(path: &str) -> Result<FileInfo, FileError> {

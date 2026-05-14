@@ -2,7 +2,7 @@ use crate::directory::{list, list_user_dirs, read, FileError, FileInfo, UserDir}
 
 #[tauri::command]
 pub async fn list_directory(path: String) -> Result<Vec<FileInfo>, FileError> {
-    tokio::task::spawn_blocking(move || list(&path))
+    tokio::task::spawn_blocking(move || list(path))
         .await
         .map_err(|err| FileError::directory(err.to_string()))
         .map_err(|err| FileError::directory(err.to_string()))?
