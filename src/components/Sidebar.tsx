@@ -18,9 +18,9 @@ export function Sidebar(
     }: Props) {
     const panel = useResizablePanel({
         initialWidth: 288,
-        minWidth: 240,
-        maxWidth: 480,
-        offsetLeft: 48,
+        minWidth: 120,
+        maxWidth: 600,
+        offsetLeft: 0,
     });
 
     if (!open) {
@@ -29,7 +29,7 @@ export function Sidebar(
                 type="button"
                 title="Show context"
                 onClick={onOpen}
-                className="absolute left-3 top-3 z-30 flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl border border-line-soft bg-panel-bg text-text-faint shadow-xl transition-colors hover:border-accent-muted hover:text-accent-strong"
+                className="hidden absolute left-3 top-3 z-30 flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl border border-line-soft bg-panel-bg text-text-faint shadow-xl transition-colors hover:border-accent-muted hover:text-accent-strong"
             >
                 <PanelLeftOpen className="h-4 w-4"/>
             </button>
@@ -38,13 +38,9 @@ export function Sidebar(
 
     return (
         <>
-            <div
-                className="fixed inset-0 z-30 bg-black/40 lg:hidden"
-                onClick={onClose}
-            />
 
             <aside
-                className="absolute inset-y-0 left-0 z-40 flex w-[min(86vw,360px)] shrink-0 flex-col border-r border-line-soft bg-panel-bg shadow-2xl lg:relative lg:z-auto lg:w-auto lg:shadow-none"
+                className="inset-y-0 left-0 flex shrink-0 flex-col border-r border-line-soft bg-panel-bg relative z-auto w-auto shadow-none"
                 style={{width: `min(86vw, ${panel.width}px)`}}
             >
 
@@ -52,7 +48,7 @@ export function Sidebar(
                         type="button"
                         title="Hide"
                         onClick={onClose}
-                        className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-transparent bg-transparent text-text-faint transition-colors hover:border-accent-muted hover:text-accent-strong"
+                        className="hidden flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-transparent bg-transparent text-text-faint transition-colors hover:border-accent-muted hover:text-accent-strong"
                     >
                         <PanelLeftClose className="h-3.5 w-3.5"/>
                     </button>
@@ -66,7 +62,7 @@ export function Sidebar(
                 <div
                     {...panel.resizeHandleProps}
                     className={[
-                        "absolute -right-0.75 top-0 hidden h-full w-1.5 cursor-col-resize bg-transparent transition-colors hover:bg-accent-muted lg:block",
+                        "absolute -right-0.75 top-0 h-full w-1.5 cursor-col-resize bg-transparent transition-colors hover:bg-accent-muted block",
                         panel.dragging ? "bg-accent-muted" : "",
                     ].join(" ")}
                 />

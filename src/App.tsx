@@ -7,7 +7,7 @@ import { Sidebar } from "./components/Sidebar";
 function App() {
     const [userDirectories, setUserDirectories] = useState<UserDir[]>([]);
     const [error, setError] = useState<string | undefined>(undefined);
-    const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+    const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
 
     useEffect(() => {
         try {
@@ -24,7 +24,7 @@ function App() {
     }, [])
 
     return (
-        <main className="container">
+        <main className="h-screen w-full">
             <div className="flex h-full flex-col">
                 <div className="relative flex min-h-0 flex-1 overflow-hidden">
                     <Sidebar userDirs={userDirectories} open={sidebarOpen} onOpen={() => setSidebarOpen(true)} onClose={() => setSidebarOpen(false)} />
