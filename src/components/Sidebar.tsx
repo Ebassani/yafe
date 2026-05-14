@@ -7,6 +7,7 @@ interface Props {
     open: boolean;
     onOpen: () => void;
     onClose: () => void;
+    onSelect: (path: string | undefined) => void;
 }
 
 export function Sidebar(
@@ -15,6 +16,7 @@ export function Sidebar(
         open,
         onOpen,
         onClose,
+        onSelect
     }: Props) {
     const panel = useResizablePanel({
         initialWidth: 288,
@@ -55,7 +57,7 @@ export function Sidebar(
 
                 <div className="min-h-0 flex-1 flex flex-col overflow-y-auto p-3">
                     {userDirs.map(directory => (
-                        <SidebarItem directory={directory} />
+                        <SidebarItem onSelect={onSelect} directory={directory} />
                     ))}
                 </div>
 
@@ -72,12 +74,13 @@ export function Sidebar(
 }
 
 interface SidebarItemProps {
-    directory: UserDir
+    directory: UserDir;
+    onSelect: (path: string | undefined) => void;
 }
 
-function SidebarItem({directory}: SidebarItemProps) {
+function SidebarItem({directory, onSelect}: SidebarItemProps) {
     return (
-        <div className={`p-1 bg-panel-muted m-0.5`}>
+        <div className={`p-1 bg-panel-muted m-0.5`} onClick={() => onSelect(directory.dir_path)}>
             {directory.user_dir_type}
         </div>
     )

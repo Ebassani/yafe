@@ -8,26 +8,31 @@ function App() {
     const [userDirectories, setUserDirectories] = useState<UserDir[]>([]);
     const [error, setError] = useState<string | undefined>(undefined);
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+    const [selectedPath, setSelectedPath] = useState<string | undefined>(undefined)
+
+    const onSelect = (path: string | undefined) => {
+        setSelectedPath(path);
+    }
 
     useEffect(() => {
-        try {
-            const fetchDirectories = async () => {
+        (async () => {
+            try {
                 const dir = await listUserDirectories();
-
                 setUserDirectories(dir);
+            } catch (e) {
+                setError(String(e));
             }
-
-            fetchDirectories().then();
-        } catch (e) {
-            setError(String(e))
-        }
+        })()
     }, [])
 
     return (
         <main className="h-screen w-full">
             <div className="flex h-full flex-col">
                 <div className="relative flex min-h-0 flex-1 overflow-hidden">
-                    <Sidebar userDirs={userDirectories} open={sidebarOpen} onOpen={() => setSidebarOpen(true)} onClose={() => setSidebarOpen(false)} />
+                    <Sidebar userDirs={userDirectories} open={sidebarOpen}
+                             onOpen={() => setSidebarOpen(true)}
+                             onClose={() => setSidebarOpen(false)}
+                             onSelect={onSelect}/>
 
                     <div className="flex min-w-0 flex-1 flex-col">
                         <h1>Welcome to Tauri + React</h1>
