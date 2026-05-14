@@ -7,7 +7,11 @@ interface Props {
 export default function DirectoryView({files}: Props) {
     return (
         <div>
-            <h1>Dir view</h1>
+            {files.map(file => (
+                <div>
+                    <span>{file.file_name}</span>
+                </div>
+            ))}
         </div>
     )
 }
