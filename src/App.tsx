@@ -1,6 +1,6 @@
 import reactLogo from "./assets/react.svg";
 import "./App.css";
-import {listUserDirectories, UserDir} from "./directory";
+import {FileInfo, listDirectory, listUserDirectories, UserDir} from "./directory";
 import {useEffect, useState} from "react";
 import { Sidebar } from "./components/Sidebar";
 
@@ -8,10 +8,20 @@ function App() {
     const [userDirectories, setUserDirectories] = useState<UserDir[]>([]);
     const [error, setError] = useState<string | undefined>(undefined);
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
-    const [selectedPath, setSelectedPath] = useState<string | undefined>(undefined)
+    const [selectedPath, setSelectedPath] = useState<string | undefined>(undefined);
+    const [files, setFiles] = useState<FileInfo[]>([]);
 
-    const onSelect = (path: string | undefined) => {
+    const onSelect = async (path: string | undefined) => {
         setSelectedPath(path);
+
+        if (!path) {return}
+
+        try {
+            const dirFiles = await listDirectory(path);
+            setFiles(dirFiles);
+        } catch (e) {
+            setError(String(e));
+        }
     }
 
     useEffect(() => {
