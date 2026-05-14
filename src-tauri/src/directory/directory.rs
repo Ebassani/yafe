@@ -1,6 +1,7 @@
 use std::path::Path;
 use std::fs;
-use std::fs::{read_dir, Metadata};
+use std::fs::{read_dir, DirEntry, Metadata};
+use std::mem::take;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::ipc::Channel;
 use crate::directory::{DirFileType, DirectoryStreamEvent, FileError, FileInfo, FileMetadata};
@@ -12,24 +13,28 @@ pub(crate) fn list(dir_path: String) -> Result<Vec<FileInfo>, FileError> {
         .map(|dir_item| {
             let file = dir_item.map_err(|some_err| FileError::directory(some_err.to_string()))?;
 
-            let metadata = file
-                .metadata()
-                .map_err(|err| FileError::metadata(err.to_string()))?;
-
-            let file_metadata = fs_metadata_into_file_metadata(metadata);
-
-            let file_name = file.file_name().to_string_lossy().to_string();
-            let path = file.path().to_string_lossy().to_string();
-
-            Ok(FileInfo {
-                path,
-                file_name,
-                file_metadata,
-            })
+            dir_entry_into_file_info(file)
         })
         .collect();
 
     info
+}
+
+fn dir_entry_into_file_info(file: DirEntry) -> Result<FileInfo, FileError> {
+    let metadata = file
+        .metadata()
+        .map_err(|err| FileError::metadata(err.to_string()))?;
+
+    let file_metadata = fs_metadata_into_file_metadata(metadata);
+
+    let file_name = file.file_name().to_string_lossy().to_string();
+    let path = file.path().to_string_lossy().to_string();
+
+    Ok(FileInfo {
+        path,
+        file_name,
+        file_metadata,
+    })
 }
 
 const BATCH_SIZE: usize = 10;
@@ -58,6 +63,35 @@ pub(crate) fn list_streamed(dir_path: String, request_id: String, on_event: Chan
                 continue
             },
         };
+
+        let file_info = dir_entry_into_file_info(entry)?;
+        batch.push(file_info);
+
+        total += 1;
+
+        if batch.len() >= BATCH_SIZE {
+            let entries = take(&mut batch);
+
+            on_event.send(DirectoryStreamEvent::Chunk {
+                request_id: request_id.clone(),
+                path: dir_path.clone(),
+                entries,
+                sequence,
+            }).map_err(|error| FileError::directory(error.to_string()))?;
+
+            sequence +=1;
+        }
+
+    }
+
+    if !batch.is_empty() {
+        total +=1;
+        on_event.send(DirectoryStreamEvent::Chunk {
+            request_id: request_id.clone(),
+            path: dir_path.clone(),
+            entries: batch,
+            sequence,
+        }).map_err(|error| FileError::directory(error.to_string()))?;
     }
 
     on_event.send(DirectoryStreamEvent::Complete {
