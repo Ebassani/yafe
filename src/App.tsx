@@ -1,5 +1,5 @@
 import "./App.css";
-import {FileInfo, listDirectory, listUserDirectories, UserDir} from "./directory";
+import {listUserDirectories, UserDir} from "./directory";
 import {useEffect, useState} from "react";
 import { Sidebar } from "./components/Sidebar";
 import MainView from "./components/MainView.tsx";
@@ -10,19 +10,9 @@ function App() {
     const [_, setError] = useState<string | undefined>(undefined);
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
     const [selectedPath, setSelectedPath] = useState<string | undefined>(undefined);
-    const [files, setFiles] = useState<FileInfo[]>([]);
 
     const onSelect = async (path: string | undefined) => {
         setSelectedPath(path);
-
-        if (!path) {return}
-
-        try {
-            const dirFiles = await listDirectory(path);
-            setFiles(dirFiles);
-        } catch (e) {
-            setError(String(e));
-        }
     }
 
     useEffect(() => {
@@ -49,7 +39,7 @@ function App() {
                         {!selectedPath ? (
                             <MainView />
                         ) : (
-                            <DirectoryView files={files} />
+                            <DirectoryView path={selectedPath} />
                         )}
                     </div>
                 </div>
