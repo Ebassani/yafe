@@ -18,6 +18,6 @@ export async function listDirectory(path: string): Promise<FileInfo[]> {
     return safeInvoke<FileInfo[]>('list_directory', {path});
 }
 
-export async function listDirectoryStream(path: string, requestId: string, onEvent: Channel<DirectoryEvent>) {
-    return safeInvoke('list_directory_stream', {path, requestId, onEvent})
+export async function listDirectoryStream(path: string, requestId: string, onEvent: Channel<DirectoryEvent>): Promise<void> {
+    return safeInvoke<void>('list_directory_stream', {path, requestId, onEvent})
 }

@@ -85,7 +85,6 @@ pub(crate) fn list_streamed(dir_path: String, request_id: String, on_event: Chan
     }
 
     if !batch.is_empty() {
-        total +=1;
         on_event.send(DirectoryStreamEvent::Chunk {
             request_id: request_id.clone(),
             path: dir_path.clone(),

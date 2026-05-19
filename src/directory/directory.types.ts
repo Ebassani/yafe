@@ -59,6 +59,6 @@ export type DirectoryEvent =
         data: {
             requestId: string,
             path: string,
-            total: bigint
+            total: number
         }
     }
