@@ -1,5 +1,5 @@
 use std::fs::FileType;
-use serde::{Deserialize, Serialize};
+use serde::{Serialize};
 
 #[derive(Serialize, Clone, Eq, PartialEq)]
 pub(crate) enum DirFileType {
@@ -38,7 +38,7 @@ pub(crate) struct FileInfo {
 }
 
 #[derive(Serialize, Clone)]
-#[serde(tag="event", content="data")]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase",tag="event", content="data")]
 pub(crate) enum DirectoryStreamEvent {
     Start {
         request_id: String,

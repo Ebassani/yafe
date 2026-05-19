@@ -28,3 +28,37 @@ export interface FileError {
     errorType: FileErrorType,
     message: string
 }
+
+export type DirectoryEvent =
+    {
+        event: 'start',
+        data: {
+            requestId: string,
+            path: string
+        }
+    } |
+    {
+        event: 'chunk'
+        data: {
+            requestId: string,
+            path: string,
+            entries: FileInfo[],
+            sequence: number
+        }
+    } |
+    {
+        event: 'error',
+        data: {
+            requestId: string,
+            path: string,
+            message: string
+        }
+    } |
+    {
+        event: 'complete',
+        data: {
+            requestId: string,
+            path: string,
+            total: bigint
+        }
+    }
