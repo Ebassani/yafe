@@ -1,5 +1,6 @@
-import {FileInfo, UserDir} from "./directory.types.ts";
+import {DirectoryEvent, FileInfo, UserDir} from "./directory.types.ts";
 import {safeInvoke} from "../safeInvoke.ts";
+import {Channel} from "@tauri-apps/api/core";
 
 /**
  * List the default user directories.
@@ -15,4 +16,8 @@ export async function listUserDirectories(): Promise<UserDir[]> {
  */
 export async function listDirectory(path: string): Promise<FileInfo[]> {
     return safeInvoke<FileInfo[]>('list_directory', {path});
+}
+
+export async function listDirectoryStream(path: string, requestId: string, onEvent: Channel<DirectoryEvent>) {
+    return safeInvoke('list_directory_stream', {path, requestId, onEvent})
 }
