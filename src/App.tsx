@@ -1,14 +1,13 @@
 import "./App.css";
 import {listUserDirectories, UserDir} from "./directory";
 import {useEffect, useState} from "react";
-import { Sidebar } from "./components/Sidebar";
+import {Sidebar} from "./components/Sidebar";
 import MainView from "./components/MainView.tsx";
 import DirectoryView from "./components/DirectoryView.tsx";
 
 function App() {
     const [userDirectories, setUserDirectories] = useState<UserDir[]>([]);
     const [_, setError] = useState<string | undefined>(undefined);
-    const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
     const [selectedPath, setSelectedPath] = useState<string | undefined>(undefined);
 
     const onSelect = async (path: string | undefined) => {
@@ -27,15 +26,14 @@ function App() {
     }, [])
 
     return (
-        <main className="h-screen w-full">
+        <main className="h-screen w-full overflow-hidden bg-main-bg text-text-main">
             <div className="flex h-full flex-col">
-                <div className="relative flex min-h-0 flex-1 overflow-hidden">
-                    <Sidebar userDirs={userDirectories} open={sidebarOpen}
-                             onOpen={() => setSidebarOpen(true)}
-                             onClose={() => setSidebarOpen(false)}
+                <div className="relative flex min-h-0 flex-1 overflow-hidden bg-main-bg">
+                    <Sidebar userDirs={userDirectories}
+                             selectedPath={selectedPath}
                              onSelect={onSelect}/>
 
-                    <div className="flex min-w-0 flex-1 flex-col">
+                    <div className="flex min-w-0 flex-1 flex-col bg-main-bg">
                         {!selectedPath ? (
                             <MainView />
                         ) : (

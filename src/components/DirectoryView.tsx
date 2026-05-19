@@ -1,6 +1,8 @@
 import {DirectoryEvent, FileInfo, listDirectoryStream} from "../directory";
 import {useEffect, useRef, useState} from "react";
 import {Channel} from "@tauri-apps/api/core";
+import {DirectoryToolbar} from "./DirectoryToolbar";
+import {FileList} from "./FileList";
 
 interface Props {
     path: string;
@@ -67,15 +69,10 @@ export default function DirectoryView({path}: Props) {
     }, [path]);
 
     return (
-        <div>
-            {isLoading && <div>Loading...</div>}
-            {error && <div>{error}</div>}
-            {files.map(file => (
-                <div key={file.path}>
-                    <span>{file.file_name}</span>
-                </div>
-            ))}
-        </div>
+        <section className="flex h-full min-h-0 flex-col bg-main-bg text-text-main">
+            <DirectoryToolbar path={path} fileCount={files.length} loading={isLoading}/>
+            <FileList files={files} loading={isLoading} error={error}/>
+        </section>
     )
 }
 

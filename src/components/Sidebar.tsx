@@ -1,21 +1,17 @@
-import {PanelLeftClose, PanelLeftOpen} from "lucide-react";
 import {useResizablePanel} from "../hooks/useResizablePanel";
 import {UserDir} from "../directory";
+import {SidebarLocationItem} from "./SidebarLocationItem";
 
 interface Props {
     userDirs: UserDir[],
-    open: boolean;
-    onOpen: () => void;
-    onClose: () => void;
+    selectedPath?: string;
     onSelect: (path: string | undefined) => void;
 }
 
 export function Sidebar(
     {
         userDirs,
-        open,
-        onOpen,
-        onClose,
+        selectedPath,
         onSelect
     }: Props) {
     const panel = useResizablePanel({
@@ -25,40 +21,29 @@ export function Sidebar(
         offsetLeft: 0,
     });
 
-    if (!open) {
-        return (
-            <button
-                type="button"
-                title="Show context"
-                onClick={onOpen}
-                className="hidden absolute left-3 top-3 z-30 flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl border border-line-soft bg-panel-bg text-text-faint shadow-xl transition-colors hover:border-accent-muted hover:text-accent-strong"
-            >
-                <PanelLeftOpen className="h-4 w-4"/>
-            </button>
-        );
-    }
-
     return (
         <>
 
             <aside
-                className="inset-y-0 left-0 flex shrink-0 flex-col border-r border-line-soft bg-panel-bg relative z-auto w-auto shadow-none"
+                className="relative inset-y-0 left-0 z-auto flex w-auto shrink-0 flex-col border-r border-line-soft bg-app-rail shadow-none"
                 style={{width: `min(86vw, ${panel.width}px)`}}
             >
-
-                    <button
-                        type="button"
-                        title="Hide"
-                        onClick={onClose}
-                        className="hidden flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-transparent bg-transparent text-text-faint transition-colors hover:border-accent-muted hover:text-accent-strong"
-                    >
-                        <PanelLeftClose className="h-3.5 w-3.5"/>
-                    </button>
-
-                <div className="min-h-0 flex-1 flex flex-col overflow-y-auto p-3">
+                <div className="min-h-0 flex-1 overflow-y-auto px-2 py-3">
+                    <div className="px-2 pb-2 text-xs font-medium uppercase tracking-wide text-text-faint">
+                        Quick access
+                    </div>
                     {userDirs.map(directory => (
-                        <SidebarItem onSelect={onSelect} directory={directory} />
+                        <SidebarLocationItem
+                            key={`${directory.user_dir_type}-${directory.dir_path}`}
+                            directory={directory}
+                            active={selectedPath === directory.dir_path}
+                            onSelect={onSelect}
+                        />
                     ))}
+                </div>
+
+                <div className="border-t border-line-muted px-3 py-2 text-xs text-text-faint">
+                    {userDirs.length} locations
                 </div>
 
                 <div
@@ -71,17 +56,4 @@ export function Sidebar(
             </aside>
         </>
     );
-}
-
-interface SidebarItemProps {
-    directory: UserDir;
-    onSelect: (path: string | undefined) => void;
-}
-
-function SidebarItem({directory, onSelect}: SidebarItemProps) {
-    return (
-        <div className={`p-1 bg-panel-muted m-0.5`} onClick={() => onSelect(directory.dir_path)}>
-            {directory.user_dir_type}
-        </div>
-    )
 }
