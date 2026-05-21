@@ -59,20 +59,30 @@ impl Indexer {
         file_id
     }
 
-    pub(crate) fn search_files(&self, name: String) -> Vec<Vec<FileId>> {
-        let mut file_ids: Vec<Vec<FileId>> = Vec::new();
+    pub(crate) fn search_file_candidates(&self, target_name: &str) -> Vec<SearchCandidate> {
+        let grams = Self::grams_from_text(target_name);
 
-        let grams = Self::grams_from_text(&name);
+        let mut scores: HashMap<FileId, u32> = HashMap::new();
 
         grams.iter().for_each(|&gram| {
            let index = self.shard_index(gram);
 
             if let Some(ids) = self.shards[index].lock().unwrap().postings.get(&gram) {
-                file_ids.push(ids.clone());
+                ids.iter().for_each(|&file_id| {
+                    *scores.entry(file_id).or_default() +=1;
+                });
             }
         });
 
-        file_ids
+        let minimum_score = ((grams.len() as u32 + 1) / 2).max(1);
+
+        let candidates: Vec<SearchCandidate> = scores
+            .into_iter()
+            .filter(|(_, score)| *score >= minimum_score)
+            .map(|(file_id, score)| SearchCandidate { file_id, score })
+            .collect();
+
+        candidates
     }
 
     fn insert_file_gram(&self, gram_id: GramId, file_id: FileId) {
@@ -124,6 +134,12 @@ impl Indexer {
 
         grams
     }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) struct SearchCandidate {
+    pub(crate) file_id: FileId,
+    pub(crate) score: u32
 }
 
 /// Can't say I got this idea on my own, so credits to some AI model.
