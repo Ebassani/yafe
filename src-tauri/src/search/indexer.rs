@@ -10,9 +10,9 @@ use crate::directory::DirFileType;
 /// # Async
 /// I also realized this has to be async as I want to make my file crawler async to make it faster. So now tha is also a slight problem
 pub(crate) struct Indexer{
-    pub(crate) shards: Vec<Mutex<ShardedPostings>>,
-    pub(crate) files: RwLock<HashMap<FileId, IndexedEntry>>,
-    pub(crate) file_grams: RwLock<HashMap<FileId, Vec<GramId>>>
+    shards: Vec<Mutex<ShardedPostings>>,
+    files: RwLock<HashMap<FileId, IndexedEntry>>,
+    file_grams: RwLock<HashMap<FileId, Vec<GramId>>>
 }
 
 const DEFAULT_SHARD_COUNT: usize = 64;
@@ -34,8 +34,39 @@ impl Indexer {
         }
     }
 
+    /// This is here to make sure the index used to find a gram is always the same. So, in case a trigram has to be added to the shards, the shard index can be calculated, same thing if it is to retrieve the gram
     fn shard_index(&self, gram: GramId) -> usize {
-        gram.0 as usize % self.shards.len()
+        gram.as_usize() % self.shards.len()
+    }
+
+    /// If you are reading this and wondering "Why the filter?". I'm trying to make the trigrams more forgiving, so `my_file` and `my file` both become `myfile`,
+    /// making the trigrams for both `myf`, `yfi`, `fil` and `ile`. In the end, that is just to help some people(like me) who don't always remember the proper casing and format of their file names
+    fn normalize(text: &str) -> String {
+        text.to_lowercase()
+            .chars()
+            .filter(|character| character.is_alphanumeric())
+            .collect()
+    }
+
+    fn grams_from_text(text: &str) -> Vec<GramId> {
+        let normalized = Self::normalize(text);
+        let bytes = normalized.as_bytes();
+
+        if bytes.len() < 3 {
+            return Vec::new();
+        }
+
+        let mut grams = Vec::with_capacity(bytes.len() - 2);
+
+        for window in bytes.windows(3) {
+            grams.push(GramId::from_bytes([window[0], window[1], window[2]]));
+        }
+
+        // This sort should work for now, I added Ord to GramId
+        grams.sort_unstable();
+        grams.dedup();
+
+        grams
     }
 }
 
@@ -50,12 +81,16 @@ pub(crate) struct ShardedPostings {
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub(crate) struct FileId(pub(crate) u32);
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub(crate) struct GramId(pub(crate) u32);
 
 impl GramId {
     pub(crate) fn from_bytes(bytes: [u8; 3]) -> Self {
         GramId(u32::from_be_bytes([0, bytes[0], bytes[1], bytes[2]]))
+    }
+
+    pub fn as_usize(self) -> usize {
+        self.0 as usize
     }
 }
 
