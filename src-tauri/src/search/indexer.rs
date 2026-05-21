@@ -59,6 +59,22 @@ impl Indexer {
         file_id
     }
 
+    pub(crate) fn search_files(&self, name: String) -> Vec<Vec<FileId>> {
+        let mut file_ids: Vec<Vec<FileId>> = Vec::new();
+
+        let grams = Self::grams_from_text(&name);
+
+        grams.iter().for_each(|&gram| {
+           let index = self.shard_index(gram);
+
+            if let Some(ids) = self.shards[index].lock().unwrap().postings.get(&gram) {
+                file_ids.push(ids.clone());
+            }
+        });
+
+        file_ids
+    }
+
     fn insert_file_gram(&self, gram_id: GramId, file_id: FileId) {
         let index = self.shard_index(gram_id);
         let mut shard = self.shards[index].lock().unwrap();
@@ -118,7 +134,7 @@ pub(crate) struct ShardedPostings {
     pub(crate) postings: HashMap<GramId, Vec<FileId>>
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub(crate) struct FileId(pub(crate) u32);
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
