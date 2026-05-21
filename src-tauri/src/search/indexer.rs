@@ -76,11 +76,18 @@ impl Indexer {
 
         let minimum_score = ((grams.len() as u32 + 1) / 2).max(1);
 
-        let candidates: Vec<SearchCandidate> = scores
+        let mut candidates: Vec<SearchCandidate> = scores
             .into_iter()
             .filter(|(_, score)| *score >= minimum_score)
             .map(|(file_id, score)| SearchCandidate { file_id, score })
             .collect();
+
+        candidates.sort_unstable_by(|left, right| {
+            right
+                .score
+                .cmp(&left.score)
+                .then_with(|| left.file_id.cmp(&right.file_id))
+        });
 
         candidates
     }
