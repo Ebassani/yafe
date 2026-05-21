@@ -20,7 +20,7 @@ pub(crate) fn list(dir_path: String) -> Result<Vec<FileInfo>, FileError> {
     info
 }
 
-fn dir_entry_into_file_info(file: DirEntry) -> Result<FileInfo, FileError> {
+pub(crate) fn dir_entry_into_file_info(file: DirEntry) -> Result<FileInfo, FileError> {
     let metadata = file
         .metadata()
         .map_err(|err| FileError::metadata(err.to_string()))?;
