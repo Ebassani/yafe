@@ -92,6 +92,12 @@ impl Indexer {
         candidates
     }
 
+    pub(crate) fn get_indexed_entries(&self, ids: &[FileId]) -> Vec<IndexedEntry> {
+        let files = self.files.read().unwrap();
+
+        ids.iter().filter_map(|id| files.get(id).cloned()).collect()
+    }
+
     fn insert_file_gram(&self, gram_id: GramId, file_id: FileId) {
         let index = self.shard_index(gram_id);
         let mut shard = self.shards[index].lock().unwrap();
@@ -173,6 +179,7 @@ impl GramId {
     }
 }
 
+#[derive(Clone)]
 pub(crate) struct IndexedEntry {
     pub(crate) path: String,
     pub(crate) name: String,
