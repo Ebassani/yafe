@@ -98,6 +98,18 @@ impl Indexer {
         ids.iter().filter_map(|id| files.get(id).cloned()).collect()
     }
 
+    pub(crate) fn get_indexed_entries_by_candidates(&self, ids: &[SearchCandidate]) -> Vec<IndexedEntry> {
+        let files = self.files.read().unwrap();
+
+        ids.iter().filter_map(|search_candidate| files.get(&search_candidate.file_id).cloned()).collect()
+    }
+
+    pub(crate) fn search_and_get_indexed_entries(&self, target_name: &str) -> Vec<IndexedEntry> {
+        let candidates = self.search_file_candidates(target_name);
+
+        self.get_indexed_entries_by_candidates(&candidates)
+    }
+
     fn insert_file_gram(&self, gram_id: GramId, file_id: FileId) {
         let index = self.shard_index(gram_id);
         let mut shard = self.shards[index].lock().unwrap();
