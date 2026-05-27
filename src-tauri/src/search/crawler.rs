@@ -1,25 +1,55 @@
 use std::fs::{read_dir};
-use crate::directory::{dir_entry_into_file_info, DirFileType, FileError};
+use crate::directory::{dir_entry_into_file_info, DirFileType, FileError, FileErrorType, FileErrorWithPath};
+use crate::search::indexer::{IndexedEntryKind, Indexer};
 
-fn crawl(dir_path: &str) {
+pub(crate) struct CrawlCoordinator {
+    error_trace: Vec<FileErrorWithPath>
+}
+
+fn crawl(dir_path: &str, indexer: &Indexer, coordinator: &mut CrawlCoordinator) {
     let dir = match read_dir(dir_path).map_err(|message| FileError::directory(message.to_string())) {
-        Ok(some) => {some}
-        Err(_) => {return;}
+        Ok(read_dir) => {read_dir}
+        Err(err) => {
+            let err_path = FileErrorWithPath::from_file_error_and_path(err, dir_path);
+            coordinator.error_trace.push(err_path);
+
+            return;
+        }
     };
     
-    for  (_, dir_item)  in dir.enumerate() {
+    for  dir_item  in dir {
         match dir_item {
             Ok(item) => {
                 let file_info = match dir_entry_into_file_info(item) {
-                    Ok(some) => {some}
-                    Err(_) => {continue}
+                    Ok(file_info) => {file_info}
+                    Err(err) => {
+                        let err_path = FileErrorWithPath::from_file_error_and_path(err, dir_path);
+                        coordinator.error_trace.push(err_path);
+
+                        continue;
+                    }
                 };
-                println!("{}", file_info.file_name);
-                if file_info.file_metadata.file_type == DirFileType::Dir {
-                    crawl(&file_info.path)
+
+                let file_type = file_info.file_metadata.file_type;
+
+                let is_dir = file_type == DirFileType::Dir;
+
+                indexer.index_file(file_info.file_name, file_info.path.clone(), IndexedEntryKind::from(file_type));
+
+                if is_dir {
+                    crawl(&file_info.path, indexer, coordinator)
                 }
             }
-            Err(_) => {}
+            Err(err) => {
+                let file_error = FileError {
+                    error_type: FileErrorType::Directory,
+                    message: err.to_string()
+                };
+                let err_path = FileErrorWithPath::from_file_error_and_path(file_error, dir_path);
+                coordinator.error_trace.push(err_path);
+
+                continue;
+            }
         }
     }
 }

@@ -7,6 +7,12 @@ pub(crate) struct FileError {
     pub(crate) message: String
 }
 
+#[derive(Serialize, Deserialize)]
+pub(crate) struct FileErrorWithPath {
+    pub(crate) file_error: FileError,
+    pub(crate) path: String
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) enum FileErrorType {
     Metadata,
@@ -42,5 +48,14 @@ impl FileError {
 impl fmt::Display for FileError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}: {}", self.error_type, self.message)
+    }
+}
+
+impl FileErrorWithPath {
+    pub(crate) fn from_file_error_and_path(file_error: FileError, path: &str) -> Self {
+        Self {
+            file_error,
+            path: path.to_string()
+        }
     }
 }
