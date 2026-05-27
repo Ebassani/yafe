@@ -6,6 +6,14 @@ pub(crate) struct CrawlCoordinator {
     error_trace: Vec<FileErrorWithPath>
 }
 
+impl CrawlCoordinator {
+    pub(crate) fn new() -> Self {
+        Self {
+            error_trace: Vec::new()
+        }
+    }
+}
+
 fn crawl(dir_path: &str, indexer: &Indexer, coordinator: &mut CrawlCoordinator) {
     let dir = match read_dir(dir_path).map_err(|message| FileError::directory(message.to_string())) {
         Ok(read_dir) => {read_dir}
