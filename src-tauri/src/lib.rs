@@ -1,6 +1,8 @@
 mod directory;
 mod search;
 
+mod queue;
+
 use crate::directory::{list_directory, list_directory_stream, list_user_directories, read_file};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
