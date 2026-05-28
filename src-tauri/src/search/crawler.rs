@@ -9,6 +9,8 @@ pub(crate) struct CrawlCoordinator {
     queue: Arc<Queue<String>>
 }
 
+const THREAD_AMOUNT: usize = 8;
+
 impl CrawlCoordinator {
     pub(crate) fn new() -> Self {
         Self {
@@ -17,10 +19,12 @@ impl CrawlCoordinator {
         }
     }
 
-    pub(crate) async fn crawl_and_index(self: Arc<Self>, root_path: String, indexer: Arc<Indexer>) {
-        self.queue.push(root_path);
+    pub(crate) async fn crawl_and_index(self: Arc<Self>, root_paths: Vec<String>, indexer: Arc<Indexer>) {
+        for path in root_paths {
+            self.queue.push(path);
+        }
 
-        Arc::clone(&self.queue).run_blocking(10, {
+        Arc::clone(&self.queue).run_blocking(THREAD_AMOUNT, {
             let indexer = Arc::clone(&indexer);
             let coordinator = Arc::clone(&self);
 
