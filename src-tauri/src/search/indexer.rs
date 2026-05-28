@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Mutex, RwLock};
 use std::sync::atomic::{AtomicU32, Ordering};
+use serde::{Deserialize, Serialize};
 use crate::directory::DirFileType;
 
 /// This file will be a nightmare, I was researching about search types and I found one called trigram search.
@@ -191,14 +192,14 @@ impl GramId {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub(crate) struct IndexedEntry {
     pub(crate) path: String,
     pub(crate) name: String,
     pub(crate) kind: IndexedEntryKind,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub(crate) enum IndexedEntryKind {
     File,
     Directory,

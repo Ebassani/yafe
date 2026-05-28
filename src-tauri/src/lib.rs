@@ -7,7 +7,7 @@ mod state;
 
 use std::sync::Arc;
 use crate::directory::{list_directory, list_directory_stream, list_user_directories, read_file};
-use crate::search::{CrawlCoordinator, Indexer};
+use crate::search::{search_index, CrawlCoordinator, Indexer};
 use crate::state::AppState;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -39,7 +39,8 @@ pub fn run() {
             list_directory,
             list_directory_stream,
             read_file,
-            list_user_directories
+            list_user_directories,
+            search_index
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
