@@ -1,32 +1,43 @@
 use std::collections::VecDeque;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 use tokio::task::JoinSet;
 
 pub(crate) struct Queue<T> {
-    pending: Mutex<VecDeque<T>>,
+    state: Mutex<QueueState<T>>,
     available: Condvar,
-    current_jobs: AtomicUsize,
-    cancelled: AtomicBool,
+}
+
+pub(crate) struct QueueState<T> {
+    pending: VecDeque<T>,
+    current_jobs: usize,
+    cancelled: bool
+}
+
+impl<T> QueueState<T> {
+    pub(crate) fn new() -> Self {
+        Self {
+            pending: VecDeque::new(),
+            current_jobs: 0,
+            cancelled: false,
+        }
+    }
 }
 
 impl<T> Queue<T> {
     pub(crate) fn new() -> Self {
         Self {
-            pending: Mutex::new(VecDeque::new()),
+            state: Mutex::new(QueueState::new()),
             available: Default::default(),
-            current_jobs: Default::default(),
-            cancelled: Default::default(),
         }
     }
 
     pub(crate) fn push(&self, item: T) {
-        self.pending.lock().unwrap().push_back(item);
+        self.state.lock().unwrap().pending.push_back(item);
         self.available.notify_one();
     }
 
     pub(crate) fn cancel(&self) {
-        self.cancelled.store(true, Ordering::Relaxed);
+        self.state.lock().unwrap().cancelled = true;
         self.available.notify_all();
     }
 
@@ -47,29 +58,29 @@ impl<T> Queue<T> {
             tasks.spawn_blocking(move || {
                 loop {
                     let item = {
-                        let mut pending = queue.pending.lock().unwrap();
+                        let mut state = queue.state.lock().unwrap();
 
                         loop {
-                            if queue.cancelled.load(Ordering::Relaxed) {
+                            if state.cancelled {
                                 return;
                             }
 
-                            if let Some(item) = pending.pop_front() {
-                                queue.current_jobs.fetch_add(1, Ordering::Relaxed);
+                            if let Some(item) = state.pending.pop_front() {
+                                state.current_jobs += 1;
 
                                 break item;
                             }
 
-                            if queue.current_jobs.load(Ordering::Relaxed) == 0 {
+                            if state.current_jobs == 0 {
                                 return;
                             }
-                            pending = queue.available.wait(pending).unwrap();
+                            state = queue.available.wait(state).unwrap();
                         }
                     };
 
                     closure(item);
 
-                    queue.current_jobs.fetch_sub(1, Ordering::Relaxed);
+                    queue.state.lock().unwrap().current_jobs -= 1;
 
                     queue.available.notify_all()
                 }
