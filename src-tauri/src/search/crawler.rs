@@ -1,20 +1,23 @@
 use std::fs::{read_dir};
 use crate::directory::{dir_entry_into_file_info, DirFileType, FileError, FileErrorType, FileErrorWithPath};
+use crate::queue::Queue;
 use crate::search::indexer::{IndexedEntryKind, Indexer};
 
 pub(crate) struct CrawlCoordinator {
-    error_trace: Vec<FileErrorWithPath>
+    error_trace: Vec<FileErrorWithPath>,
+    queue: Queue<String>
 }
 
 impl CrawlCoordinator {
     pub(crate) fn new() -> Self {
         Self {
-            error_trace: Vec::new()
+            error_trace: Vec::new(),
+            queue: Queue::new(),
         }
     }
 }
 
-fn crawl(dir_path: &str, indexer: &Indexer, coordinator: &mut CrawlCoordinator) {
+fn crawl(dir_path: &str, indexer: &Indexer, coordinator: &mut CrawlCoordinator, queue: &Queue<String>) {
     let dir = match read_dir(dir_path).map_err(|message| FileError::directory(message.to_string())) {
         Ok(read_dir) => {read_dir}
         Err(err) => {
@@ -42,10 +45,10 @@ fn crawl(dir_path: &str, indexer: &Indexer, coordinator: &mut CrawlCoordinator) 
 
                 let is_dir = file_type == DirFileType::Dir;
 
-                indexer.index_file(file_info.file_name, file_info.path.clone(), IndexedEntryKind::from(file_type));
+                indexer.index_file(file_info.file_name.clone(), file_info.path.clone(), IndexedEntryKind::from(file_type));
 
                 if is_dir {
-                    crawl(&file_info.path, indexer, coordinator)
+                    queue.push(file_info.file_name)
                 }
             }
             Err(err) => {
