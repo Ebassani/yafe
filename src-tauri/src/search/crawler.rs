@@ -59,10 +59,10 @@ impl CrawlCoordinator {
 
                     let is_dir = file_type == DirFileType::Dir;
 
-                    indexer.index_file(file_info.file_name.clone(), file_info.path.clone(), IndexedEntryKind::from(file_type));
+                    indexer.index_file(file_info.file_name, file_info.path.clone(), IndexedEntryKind::from(file_type));
 
                     if is_dir {
-                        self.queue.push(file_info.file_name)
+                        self.queue.push(file_info.path)
                     }
                 }
                 Err(err) => {
