@@ -6,7 +6,7 @@ mod queue;
 mod state;
 
 use std::sync::Arc;
-use crate::directory::{list_directory, list_directory_stream, list_user_directories, read_file};
+use crate::directory::{list_directory, list_directory_stream, list_user_directories, list_user_dirs, read_file};
 use crate::search::{search_index, CrawlCoordinator, Indexer};
 use crate::state::AppState;
 
@@ -24,9 +24,15 @@ pub fn run() {
             tauri::async_runtime::spawn(async move {
                 let coordinator = Arc::new(CrawlCoordinator::new());
 
+                let mut user_dirs: Vec<String> = Vec::new();
+
+                for dir in list_user_dirs() {
+                    user_dirs.push(dir.dir_path);
+                }
+
                 Arc::clone(&coordinator)
                     .crawl_and_index(
-                        vec!["C:/Users/Eduar/OneDrive/Documentos".to_string()],
+                        user_dirs,
                         indexer,
                     )
                     .await;
