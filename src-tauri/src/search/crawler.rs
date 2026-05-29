@@ -2,7 +2,8 @@ use std::fs::{read_dir};
 use std::sync::{Arc, Mutex};
 use crate::directory::{dir_entry_into_file_info, DirFileType, FileError, FileErrorType, FileErrorWithPath};
 use crate::queue::Queue;
-use crate::search::indexer::{IndexedEntryKind, Indexer};
+use crate::search::Indexer;
+use crate::search::indexer::{IndexedEntryKind};
 
 pub(crate) struct CrawlCoordinator {
     error_trace: Mutex<Vec<FileErrorWithPath>>,
@@ -19,7 +20,7 @@ impl CrawlCoordinator {
         }
     }
 
-    pub(crate) async fn crawl_and_index(self: Arc<Self>, root_paths: Vec<String>, indexer: Arc<Indexer>) {
+    pub(crate) async fn crawl_and_index(self: Arc<Self>, root_paths: Vec<String>, indexer: Arc<dyn Indexer>) {
         for path in root_paths {
             self.queue.push(path);
         }
@@ -29,13 +30,13 @@ impl CrawlCoordinator {
             let coordinator = Arc::clone(&self);
 
             move |dir_path| {
-                coordinator.crawl_one_directory(&dir_path, &indexer);
+                coordinator.crawl_one_directory(&dir_path, indexer.as_ref());
             }
         }).await;
 
     }
 
-    fn crawl_one_directory(&self, dir_path: &str, indexer: &Indexer) {
+    fn crawl_one_directory(&self, dir_path: &str, indexer: &dyn Indexer) {
         let dir = match read_dir(dir_path).map_err(|message| FileError::directory(message.to_string())) {
             Ok(read_dir) => {read_dir}
             Err(err) => {

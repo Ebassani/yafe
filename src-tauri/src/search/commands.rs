@@ -1,5 +1,5 @@
 use tauri::State;
-use crate::search::IndexedEntry;
+use crate::search::{IndexedEntry, Indexer};
 use crate::state::AppState;
 
 #[tauri::command]

@@ -4,6 +4,18 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use serde::{Deserialize, Serialize};
 use crate::directory::DirFileType;
 
+pub(crate) trait Indexer: Send + Sync {
+    fn index_file(&self, name: String, path: String, indexed_entry_kind: IndexedEntryKind) -> FileId;
+
+    fn search_file_candidates(&self, target_name: &str) -> Vec<SearchCandidate>;
+
+    fn get_indexed_entries(&self, ids: &[FileId]) -> Vec<IndexedEntry>;
+
+    fn get_indexed_entries_by_candidates(&self, ids: &[SearchCandidate]) -> Vec<IndexedEntry>;
+
+    fn search_and_get_indexed_entries(&self, target_name: &str) -> Vec<IndexedEntry>;
+}
+
 /// This file will be a nightmare, I was researching about search types and I found one called trigram search.
 /// So the idea is to separate all the files/directories in grams from their names, let's say for `load`, we do the split with the grams `loa` and `oad`.
 /// To make lookup fast we put the gram in a hashmap alongside all the files that have that gram.
@@ -11,7 +23,7 @@ use crate::directory::DirFileType;
 ///
 /// # Async
 /// I also realized this has to be async as I want to make my file crawler async to make it faster. So now tha is also a slight problem
-pub(crate) struct Indexer{
+pub(crate) struct HashIndexer {
     shards: Vec<Mutex<ShardedPostings>>,
     files: RwLock<HashMap<FileId, IndexedEntry>>,
     file_grams: RwLock<HashMap<FileId, Vec<GramId>>>,
@@ -20,25 +32,8 @@ pub(crate) struct Indexer{
 
 const DEFAULT_SHARD_COUNT: usize = 64;
 
-impl Indexer {
-    pub(crate) fn new() -> Self {
-        Self::with_shard_count(DEFAULT_SHARD_COUNT)
-    }
-
-    pub(crate) fn with_shard_count(shard_count: usize) -> Self {
-        assert!(shard_count > 0);
-
-        Self {
-            shards: (0..shard_count)
-                .map(|_| Mutex::new(ShardedPostings::default()))
-                .collect(),
-            files: Default::default(),
-            file_grams: Default::default(),
-            next_file_id: AtomicU32::new(0),
-        }
-    }
-
-    pub(crate) fn index_file(&self, name: String, path: String, indexed_entry_kind: IndexedEntryKind) -> FileId {
+impl Indexer for HashIndexer {
+    fn index_file(&self, name: String, path: String, indexed_entry_kind: IndexedEntryKind) -> FileId {
         let file_id = self.next_file_id();
 
         let file_entry = IndexedEntry {
@@ -60,13 +55,13 @@ impl Indexer {
         file_id
     }
 
-    pub(crate) fn search_file_candidates(&self, target_name: &str) -> Vec<SearchCandidate> {
+    fn search_file_candidates(&self, target_name: &str) -> Vec<SearchCandidate> {
         let grams = Self::grams_from_text(target_name);
 
         let mut scores: HashMap<FileId, u32> = HashMap::new();
 
         grams.iter().for_each(|&gram| {
-           let index = self.shard_index(gram);
+            let index = self.shard_index(gram);
 
             if let Some(ids) = self.shards[index].lock().unwrap().postings.get(&gram) {
                 ids.iter().for_each(|&file_id| {
@@ -93,22 +88,40 @@ impl Indexer {
         candidates
     }
 
-    pub(crate) fn get_indexed_entries(&self, ids: &[FileId]) -> Vec<IndexedEntry> {
+    fn get_indexed_entries(&self, ids: &[FileId]) -> Vec<IndexedEntry> {
         let files = self.files.read().unwrap();
 
         ids.iter().filter_map(|id| files.get(id).cloned()).collect()
     }
 
-    pub(crate) fn get_indexed_entries_by_candidates(&self, ids: &[SearchCandidate]) -> Vec<IndexedEntry> {
+    fn get_indexed_entries_by_candidates(&self, ids: &[SearchCandidate]) -> Vec<IndexedEntry> {
         let files = self.files.read().unwrap();
 
         ids.iter().filter_map(|search_candidate| files.get(&search_candidate.file_id).cloned()).collect()
     }
 
-    pub(crate) fn search_and_get_indexed_entries(&self, target_name: &str) -> Vec<IndexedEntry> {
+    fn search_and_get_indexed_entries(&self, target_name: &str) -> Vec<IndexedEntry> {
         let candidates = self.search_file_candidates(target_name);
 
         self.get_indexed_entries_by_candidates(&candidates)
+    }
+}
+
+impl HashIndexer {
+    pub(crate) fn new() -> Self {
+        Self::with_shard_count(DEFAULT_SHARD_COUNT)
+    }
+    pub(crate) fn with_shard_count(shard_count: usize) -> Self {
+        assert!(shard_count > 0);
+
+        Self {
+            shards: (0..shard_count)
+                .map(|_| Mutex::new(ShardedPostings::default()))
+                .collect(),
+            files: Default::default(),
+            file_grams: Default::default(),
+            next_file_id: AtomicU32::new(0),
+        }
     }
 
     fn insert_file_gram(&self, gram_id: GramId, file_id: FileId) {

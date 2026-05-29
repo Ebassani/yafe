@@ -7,12 +7,12 @@ mod state;
 
 use std::sync::Arc;
 use crate::directory::{list_directory, list_directory_stream, list_user_directories, list_user_dirs, read_file};
-use crate::search::{search_index, CrawlCoordinator, Indexer};
+use crate::search::{search_index, CrawlCoordinator, HashIndexer, Indexer};
 use crate::state::AppState;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let indexer = Arc::new(Indexer::new());
+    let indexer = Arc::new(HashIndexer::new());
 
     tauri::Builder::default()
         .manage(AppState {

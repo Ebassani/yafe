@@ -1,6 +1,6 @@
 use std::sync::Arc;
-use crate::search::Indexer;
+use crate::search::HashIndexer;
 
 pub(crate) struct AppState {
-    pub(crate) indexer: Arc<Indexer>
+    pub(crate) indexer: Arc<HashIndexer>
 }
