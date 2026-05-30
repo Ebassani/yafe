@@ -7,5 +7,5 @@ pub(crate) fn search_index(
     query: String,
     state: State<'_, AppState>,
 ) -> Vec<IndexedEntry> {
-    state.indexer.search_and_get_indexed_entries(&query)
+    state.hash_indexer.search_and_get_indexed_entries(&query)
 }
