@@ -5,6 +5,8 @@ mod queue;
 
 mod state;
 
+mod database;
+
 use std::sync::Arc;
 use search::HashIndexer;
 use crate::directory::{list_directory, list_directory_stream, list_user_directories, list_user_dirs, read_file};
