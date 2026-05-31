@@ -5,7 +5,6 @@ mod queue;
 
 mod state;
 
-mod database;
 
 use std::sync::Arc;
 use search::HashIndexer;
