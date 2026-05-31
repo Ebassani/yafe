@@ -1,7 +1,7 @@
 import {useResizablePanel} from "../hooks/useResizablePanel";
 import {UserDir} from "../directory";
 import {SidebarLocationItem} from "./SidebarLocationItem";
-import {Command, HomeIcon, Search, X} from "lucide-react";
+import {Command, Search, X, BookMarked} from "lucide-react";
 import {useEffect, useRef} from "react";
 
 interface Props {
@@ -86,7 +86,7 @@ export function Sidebar(
                                 ) : (
                                     <span>{shortcutModifier}</span>
                                 )}
-                                <span>K</span>
+                                <span>+ K</span>
                             </span>
                         )}
                     </div>
@@ -104,9 +104,9 @@ export function Sidebar(
                 ].join(" ")}
             >
                 <span className="flex h-6 w-6 items-center justify-center text-text-faint group-hover:text-accent-strong">
-                    <HomeIcon className="h-4 w-4"/>
+                    <BookMarked className="h-4 w-4"/>
                 </span>
-                <span className="text-sm font-medium">Home</span>
+                <span className="text-sm font-medium">Main page</span>
             </button>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
@@ -123,11 +123,6 @@ export function Sidebar(
                         />
                     ))}
                 </div>
-            </div>
-
-            <div className="flex items-center justify-between border-t border-line-muted px-3 py-2 text-[11px] text-text-faint">
-                <span>{userDirs.length} locations</span>
-                <span className="flex h-1.5 w-1.5 rounded-full bg-accent-strong shadow-[0_0_6px_var(--color-accent-strong)]" title="Index ready"/>
             </div>
 
             <div
