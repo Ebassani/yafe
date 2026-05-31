@@ -16,7 +16,7 @@ export function FileRow({file}: Props) {
     const Icon = getFileIcon(fileType);
 
     return (
-        <div className="grid min-h-10 grid-cols-[minmax(12rem,1fr)_6rem_7rem_10rem] items-center gap-3 border-b border-line-muted px-4 text-sm text-text-soft transition-colors hover:bg-panel-soft">
+        <div className="grid min-h-10 grid-cols-[minmax(14rem,1fr)_6rem_7rem_10rem] items-center gap-3 border-b border-line-muted/60 px-6 text-sm text-text-soft transition-colors hover:bg-panel-soft">
             <div className="flex min-w-0 items-center gap-3">
                 <span className={getIconClassName(fileType)}>
                     <Icon className="h-4 w-4"/>

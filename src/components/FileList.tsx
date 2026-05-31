@@ -12,13 +12,13 @@ export function FileList({files, loading, error}: Props) {
     return (
         <div className="flex min-h-0 flex-1 flex-col bg-main-bg">
             {error && (
-                <div className="mx-4 mt-3 flex items-center gap-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger-text">
+                <div className="mx-6 mt-3 flex items-center gap-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger-text">
                     <AlertTriangle className="h-4 w-4 shrink-0"/>
                     <span className="min-w-0 truncate">{error}</span>
                 </div>
             )}
 
-            <div className="grid h-9 shrink-0 grid-cols-[minmax(12rem,1fr)_6rem_7rem_10rem] items-center gap-3 border-b border-line-muted bg-panel-bg px-4 text-xs font-medium uppercase tracking-wide text-text-faint">
+            <div className="grid h-9 shrink-0 grid-cols-[minmax(14rem,1fr)_6rem_7rem_10rem] items-center gap-3 border-b border-line-muted bg-panel-bg/60 px-6 text-[11px] font-medium uppercase tracking-wider text-text-faint">
                 <div>Name</div>
                 <div>Type</div>
                 <div>Size</div>
@@ -40,7 +40,7 @@ function EmptyFileList({loading}: { loading: boolean }) {
     return (
         <div className="flex h-full min-h-64 items-center justify-center px-6 text-center">
             <div className="flex max-w-sm flex-col items-center gap-3 text-text-muted">
-                <span className="flex h-11 w-11 items-center justify-center rounded-md border border-line-soft bg-panel-bg text-text-faint">
+                <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-line-soft bg-panel-bg text-text-faint">
                     {loading ? (
                         <Loader2 className="h-5 w-5 animate-spin text-accent-strong"/>
                     ) : (
@@ -48,11 +48,11 @@ function EmptyFileList({loading}: { loading: boolean }) {
                     )}
                 </span>
                 <div>
-                    <div className="text-sm font-medium text-text-soft">
+                    <div className="text-sm font-semibold text-text-soft">
                         {loading ? "Loading folder" : "Folder is empty"}
                     </div>
                     <div className="mt-1 text-xs text-text-faint">
-                        {loading ? "Loading..." : "No files or folders were found."}
+                        {loading ? "Streaming entries..." : "No files or folders were found."}
                     </div>
                 </div>
             </div>

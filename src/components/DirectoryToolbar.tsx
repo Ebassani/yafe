@@ -11,9 +11,11 @@ export function DirectoryToolbar({path, fileCount, loading}: Props) {
 
     return (
         <div
-            className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-line-soft bg-panel-bg px-4">
+            className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-line-soft bg-panel-bg/80 px-6 backdrop-blur">
             <div className="flex min-w-0 items-center gap-3">
-                <FolderOpen className="h-6 w-6 text-accent-strong"/>
+                <span className="flex h-8 w-8 items-center justify-center rounded-md border border-accent-muted/60 bg-accent-soft text-accent-strong">
+                    <FolderOpen className="h-4 w-4"/>
+                </span>
                 <div className="min-w-0">
                     <div className="flex min-w-0 items-center overflow-hidden text-sm text-text-soft">
                         {segments.map((segment, index) => (
@@ -24,7 +26,7 @@ export function DirectoryToolbar({path, fileCount, loading}: Props) {
                                 <span
                                     className={[
                                         "truncate",
-                                        index === segments.length - 1 ? "font-medium text-text-main" : "text-text-muted",
+                                        index === segments.length - 1 ? "font-semibold text-text-main" : "text-text-muted",
                                     ].join(" ")}
                                 >
                                     {segment}
@@ -35,9 +37,10 @@ export function DirectoryToolbar({path, fileCount, loading}: Props) {
                 </div>
             </div>
 
-            <div className="flex shrink-0 items-center gap-2 text-xs text-text-muted">
+            <div className="flex shrink-0 items-center gap-2 rounded-md border border-line-soft bg-panel-soft/60 px-2.5 py-1 text-xs text-text-muted">
                 {loading && <Loader2 className="h-3.5 w-3.5 animate-spin text-accent-strong"/>}
-                <span>{fileCount} items</span>
+                <span className="tabular-nums">{fileCount}</span>
+                <span className="text-text-faint">items</span>
             </div>
         </div>
     );
