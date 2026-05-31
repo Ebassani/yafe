@@ -28,6 +28,7 @@ export function Sidebar(
         offsetLeft: 0,
     });
     const isSearching = query.trim().length > 0;
+    const shortcutModifier = getSearchShortcutModifier();
 
     useEffect(() => {
         const onKeyDown = (event: KeyboardEvent) => {
@@ -80,7 +81,11 @@ export function Sidebar(
                             </button>
                         ) : (
                             <span className="flex items-center gap-1 rounded border border-line-soft bg-panel-soft px-1.5 py-0.5 text-[10px] font-medium text-text-faint">
-                                <Command className="h-3 w-3"/>
+                                {shortcutModifier === "Command" ? (
+                                    <Command className="h-3 w-3"/>
+                                ) : (
+                                    <span>{shortcutModifier}</span>
+                                )}
                                 <span>K</span>
                             </span>
                         )}
@@ -134,4 +139,8 @@ export function Sidebar(
             />
         </aside>
     );
+}
+
+function getSearchShortcutModifier(): "Command" | "Ctrl" {
+    return navigator.platform.toLowerCase().includes("mac") ? "Command" : "Ctrl";
 }
