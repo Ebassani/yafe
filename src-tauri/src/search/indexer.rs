@@ -44,7 +44,7 @@ impl GramId {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub(crate) struct IndexedEntry {
     pub(crate) path: String,
     pub(crate) name: String,

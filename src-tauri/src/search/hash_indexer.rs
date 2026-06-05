@@ -31,7 +31,7 @@ impl Indexer for HashIndexer {
 
         self.files.write().unwrap().insert(file_id, file_entry);
 
-        let grams = Self::grams_from_text(&name);
+        let grams = grams_from_text(&name);
 
         grams.iter().for_each(|&gram| {
             self.insert_file_gram(gram, file_id)
@@ -43,7 +43,7 @@ impl Indexer for HashIndexer {
     }
 
     fn search_file_candidates(&self, target_name: &str) -> Vec<SearchCandidate> {
-        let grams = Self::grams_from_text(target_name);
+        let grams = grams_from_text(target_name);
 
         let mut scores: HashMap<FileId, u32> = HashMap::new();
 
@@ -131,33 +131,84 @@ impl HashIndexer {
         gram.as_usize() % self.shards.len()
     }
 
-    /// If you are reading this and wondering "Why the filter?". I'm trying to make the trigrams more forgiving, so `my_file` and `my file` both become `myfile`,
-    /// making the trigrams for both `myf`, `yfi`, `fil` and `ile`. In the end, that is just to help some people(like me) who don't always remember the proper casing and format of their file names
-    fn normalize(text: &str) -> String {
-        text.to_lowercase()
-            .chars()
-            .filter(|character| character.is_alphanumeric())
-            .collect()
+}
+
+/// If you are reading this and wondering "Why the filter?". I'm trying to make the trigrams more forgiving, so `my_file` and `my file` both become `myfile`,
+/// making the trigrams for both `myf`, `yfi`, `fil` and `ile`. In the end, that is just to help some people(like me) who don't always remember the proper casing and format of their file names
+fn normalize(text: &str) -> String {
+    text.to_lowercase()
+        .chars()
+        .filter(|character| character.is_alphanumeric())
+        .collect()
+}
+
+fn grams_from_text(text: &str) -> Vec<GramId> {
+    let normalized = normalize(text);
+    let bytes = normalized.as_bytes();
+
+    if bytes.len() < 3 {
+        return Vec::new();
     }
 
-    fn grams_from_text(text: &str) -> Vec<GramId> {
-        let normalized = Self::normalize(text);
-        let bytes = normalized.as_bytes();
+    let mut grams = Vec::with_capacity(bytes.len() - 2);
 
-        if bytes.len() < 3 {
-            return Vec::new();
+    for window in bytes.windows(3) {
+        grams.push(GramId::from_bytes([window[0], window[1], window[2]]));
+    }
+
+    // This sort should work for now, I added Ord to GramId
+    grams.sort_unstable();
+    grams.dedup();
+
+    grams
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn index_file_and_find_it() {
+        let expected = IndexedEntry {
+            name: "file.txt".to_string(),
+            path: "path/to/file.txt".to_string(),
+            kind: IndexedEntryKind::File,
+        };
+
+        let indexer = HashIndexer::new();
+
+        indexer.index_file(expected.name.clone(), expected.path.clone(), expected.kind.clone());
+
+        let indexed = indexer.search_and_get_indexed_entries("file");
+
+        assert_eq!(indexed, vec![expected]);
+    }
+
+    #[test]
+    fn assert_normalization_of_file_names() {
+        let names = vec![normalize("mytextfile.txt"), normalize("my_text_file.txt"), normalize("my text file.txt")];
+
+        let len = names.len() - 1;
+
+        for (index, name) in names.iter().enumerate() {
+            if index < len {
+                assert_eq!(name.clone(), names[index + 1].clone())
+            }
         }
+    }
 
-        let mut grams = Vec::with_capacity(bytes.len() - 2);
+    #[test]
+    fn check_grams_in_text() {
+        let text = "some";
 
-        for window in bytes.windows(3) {
-            grams.push(GramId::from_bytes([window[0], window[1], window[2]]));
-        }
+        let expected = vec![
+            GramId::from_bytes(*b"ome"),
+            GramId::from_bytes(*b"som"),
+        ];
 
-        // This sort should work for now, I added Ord to GramId
-        grams.sort_unstable();
-        grams.dedup();
 
-        grams
+        let gram_ids = grams_from_text(text);
+
+        assert_eq!(gram_ids, expected);
     }
 }
