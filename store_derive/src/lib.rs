@@ -31,9 +31,16 @@ pub fn derive_store(token_stream: TokenStream) -> TokenStream {
 fn expand_derive_store(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
     let attributes = &input.attrs;
 
-    let store_config = get_store_config(attributes);
+    let store_config = get_store_config(attributes)?;
+
+    let mut primary_key_column = store_config.primary_key;
 
     let struct_identifier = &input.ident;
+
+    let table_name = match store_config.table {
+        None => {struct_identifier.to_string().to_lowercase()}
+        Some(name) => {name}
+    };
 
     let fields = match &input.data {
         Data::Struct(data_struct) => match &data_struct.fields {
@@ -55,7 +62,72 @@ fn expand_derive_store(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStr
 
     let field_names: Vec<String> = fields.iter().map(|field| field.ident.as_ref().unwrap().to_string()).collect();
 
+    let mut column_names: Vec<String> = Vec::new();
+    let mut field_idents: Vec<syn::Ident> = Vec::new();
+
     let field_configs = get_field_configs(&fields)?;
+
+    for config in field_configs {
+        if config.skip {
+            continue
+        }
+
+        let column_name = match &config.column_name {
+            Some(name) => name.clone(),
+            None => config.ident.to_string()
+        };
+
+        if config.primary_key {
+            if primary_key_column.is_some() {
+                return Err(syn::Error::new_spanned(
+                    struct_identifier,
+                    "Cannot set primary key on both config and field",
+                ))
+            } else { primary_key_column = Some(column_name.clone())}
+        }
+
+        column_names.push(column_name);
+
+        field_idents.push(config.ident);
+    }
+
+    let primary_key_column = primary_key_column.ok_or_else(|| {
+        syn::Error::new_spanned(
+            struct_identifier,
+            "No primary key in this struct",
+        )
+    })?;
+
+    if !column_names.contains(&primary_key_column) {
+        return Err(syn::Error::new_spanned(
+            struct_identifier,
+            format!("primary key `{}` is not one of the stored columns", primary_key_column),
+        ));
+    }
+
+    let insert_columns = column_names.join(", ");
+
+    let placeholders = (1..=column_names.len())
+        .map(|i| format!("?{}", i))
+        .collect::<Vec<_>>()
+        .join(", ");
+
+    let update_assignments = column_names
+        .iter()
+        .filter(|column| *column != &primary_key_column)
+        .map(|column| format!("{column} = excluded.{column}"))
+        .collect::<Vec<_>>()
+        .join(", ");
+
+    if update_assignments.is_empty() {
+        return Err(syn::Error::new_spanned(
+            struct_identifier,
+            "Store requires at least one non-primary-key column for update assignments",
+        ));
+    }
+
+    let save_query = format!("INSERT INTO {table_name} ({insert_columns}) VALUES ({placeholders}) \
+    ON CONFLICT ({primary_key_column}) DO UPDATE SET ({update_assignments})");
 
     Ok(quote! {
         impl #struct_identifier {
