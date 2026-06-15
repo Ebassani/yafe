@@ -22,37 +22,42 @@ struct FieldConfig {
 pub fn derive_store(token_stream: TokenStream) -> TokenStream {
     let input = parse_macro_input!(token_stream as DeriveInput);
 
+    match expand_derive_store(&input) {
+        Ok(tokens) => tokens.into(),
+        Err(err) => err.into_compile_error().into()
+    }
+}
+
+fn expand_derive_store(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
     let attributes = &input.attrs;
 
     let store_config = get_store_config(attributes);
 
     let struct_identifier = &input.ident;
 
-    let fields = match input.data {
-        Data::Struct(data_struct) => match data_struct.fields {
-            Fields::Named(named_fields) => named_fields.named,
+    let fields = match &input.data {
+        Data::Struct(data_struct) => match &data_struct.fields {
+            Fields::Named(named_fields) => &named_fields.named,
             _ => {
-                return syn::Error::new_spanned(
+                return Err(syn::Error::new_spanned(
                     struct_identifier,
                     "Store can only be derived for structs with named fields",
-                )
-                    .to_compile_error()
-                    .into();
+                ))
             }
         },
         _ => {
-            return syn::Error::new_spanned(
+            return Err(syn::Error::new_spanned(
                 struct_identifier,
                 "Store can only be derived for structs",
-            )
-                .to_compile_error()
-                .into();
+            ))
         }
     };
 
     let field_names: Vec<String> = fields.iter().map(|field| field.ident.as_ref().unwrap().to_string()).collect();
 
-    quote! {
+    let field_configs = get_field_configs(&fields)?;
+
+    Ok(quote! {
         impl #struct_identifier {
             pub fn list() {
                 let field_names = [#(#field_names),*];
@@ -62,7 +67,7 @@ pub fn derive_store(token_stream: TokenStream) -> TokenStream {
                 });
             }
         }
-    }.into()
+    })
 }
 
 fn get_store_config(attrs: &[Attribute]) -> syn::Result<StoreConfig> {
