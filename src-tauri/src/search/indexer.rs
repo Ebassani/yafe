@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use store_derive::Store;
 use crate::directory::DirFileType;
 
 pub(crate) trait Indexer: Send + Sync {
@@ -44,8 +45,9 @@ impl GramId {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Store)]
 pub(crate) struct IndexedEntry {
+    #[store(primary_key)]
     pub(crate) path: String,
     pub(crate) name: String,
     pub(crate) kind: IndexedEntryKind,

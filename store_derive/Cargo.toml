@@ -1,0 +1,16 @@
+[package]
+name = "store_derive"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2", features = ["full"] }
+quote = "1"
+proc-macro2 = "1"
+rusqlite = "0.40.1"
+serde = { version = "1.0.228", features = ["derive"] }
+dotenvy = "0.15.7"
+toml = "1.1.2+spec-1.1.0"
