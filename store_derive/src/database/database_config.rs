@@ -1,25 +1,30 @@
 use rusqlite::{Connection};
-use std::path::Path;
+use std::path::{PathBuf};
+use std::sync::{Arc, Mutex};
+use crate::database::store_query::StoreQuery;
 use crate::database::store_result::StoreResult;
+
+trait StoreConnector {
+    fn execute(&self, query: StoreQuery) -> StoreResult<usize>;
+    fn init(&self, init_query: &str) -> StoreResult<()>;
+}
+
+pub struct SqliteStore {
+    db_path: PathBuf,
+    conn: Arc<Mutex<Connection>>
+}
 
 pub(crate) trait Connector<T>: Send + Sync {
     fn connect(&self) -> StoreResult<T>;
-    fn init(&self, init_str: &str) -> StoreResult<()>;
 }
 
 pub(crate) struct SqliteConnector {
-    pub db_path: String,
+    pub db_path: PathBuf,
 }
 
 impl SqliteConnector {
-    pub(crate) fn new(workspace: &str, db_name: &str) -> StoreResult<Self> {
-        let base = Path::new(workspace).join(".tyde");
-        let db_path = base
-            .join(format!("{}.db", db_name))
-            .to_string_lossy()
-            .to_string();
-
-        std::fs::create_dir_all(&base).map_err(|_| rusqlite::Error::InvalidPath(base.into()))?;
+    pub(crate) fn new(db_path: PathBuf) -> StoreResult<Self> {
+        std::fs::create_dir_all(&db_path).map_err(|_| rusqlite::Error::InvalidPath(db_path.clone().into()))?;
 
         Ok(Self { db_path })
     }
@@ -28,11 +33,5 @@ impl SqliteConnector {
 impl Connector<Connection> for SqliteConnector {
     fn connect(&self) -> StoreResult<Connection> {
         Ok(Connection::open(&self.db_path)?)
-    }
-
-    fn init(&self, init_str: &str) -> StoreResult<()> {
-        let conn = self.connect()?;
-        conn.execute_batch(init_str)?;
-        Ok(())
     }
 }
