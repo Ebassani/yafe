@@ -1,9 +1,10 @@
-use rusqlite::{Connection, Result};
+use rusqlite::{Connection};
 use std::path::Path;
+use crate::database::store_result::StoreResult;
 
 pub(crate) trait Connector<T>: Send + Sync {
-    fn connect(&self) -> Result<T>;
-    fn init(&self, init_str: &str) -> Result<()>;
+    fn connect(&self) -> StoreResult<T>;
+    fn init(&self, init_str: &str) -> StoreResult<()>;
 }
 
 pub(crate) struct SqliteConnector {
@@ -11,7 +12,7 @@ pub(crate) struct SqliteConnector {
 }
 
 impl SqliteConnector {
-    pub(crate) fn new(workspace: &str, db_name: &str) -> Result<Self> {
+    pub(crate) fn new(workspace: &str, db_name: &str) -> StoreResult<Self> {
         let base = Path::new(workspace).join(".tyde");
         let db_path = base
             .join(format!("{}.db", db_name))
@@ -25,11 +26,11 @@ impl SqliteConnector {
 }
 
 impl Connector<Connection> for SqliteConnector {
-    fn connect(&self) -> Result<Connection> {
-        Connection::open(&self.db_path)
+    fn connect(&self) -> StoreResult<Connection> {
+        Ok(Connection::open(&self.db_path)?)
     }
 
-    fn init(&self, init_str: &str) -> Result<()> {
+    fn init(&self, init_str: &str) -> StoreResult<()> {
         let conn = self.connect()?;
         conn.execute_batch(init_str)?;
         Ok(())
