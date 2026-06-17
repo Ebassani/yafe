@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 use crate::database::store_query::StoreQuery;
 use crate::database::store_result::StoreResult;
 
-trait StoreConnector {
+pub trait StoreConnector: Send + Sync {
     fn execute(&self, query: StoreQuery) -> StoreResult<usize>;
     fn init(&self, init_query: &str) -> StoreResult<()>;
 }
@@ -14,24 +14,33 @@ pub struct SqliteStore {
     conn: Arc<Mutex<Connection>>
 }
 
-pub(crate) trait Connector<T>: Send + Sync {
-    fn connect(&self) -> StoreResult<T>;
-}
+impl SqliteStore {
+    pub fn new(db_path: PathBuf) -> StoreResult<Self> {
+        let conn = Self::create_connection(&db_path)?;
 
-pub(crate) struct SqliteConnector {
-    pub db_path: PathBuf,
-}
+        Ok(Self {
+            db_path,
+            conn: Arc::new(Mutex::new(conn))
+        })
+    }
 
-impl SqliteConnector {
-    pub(crate) fn new(db_path: PathBuf) -> StoreResult<Self> {
-        std::fs::create_dir_all(&db_path).map_err(|_| rusqlite::Error::InvalidPath(db_path.clone().into()))?;
+    fn create_connection(db_path: &PathBuf) -> StoreResult<Connection> {
+        let db_path: PathBuf = db_path.into();
 
-        Ok(Self { db_path })
+        if let Some(parent) = db_path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+
+        Ok(Connection::open(&db_path)?)
     }
 }
 
-impl Connector<Connection> for SqliteConnector {
-    fn connect(&self) -> StoreResult<Connection> {
-        Ok(Connection::open(&self.db_path)?)
+impl StoreConnector for SqliteStore {
+    fn execute(&self, query: StoreQuery) -> StoreResult<usize> {
+        todo!()
+    }
+
+    fn init(&self, init_query: &str) -> StoreResult<()> {
+        todo!()
     }
 }
