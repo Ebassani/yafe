@@ -1,6 +1,8 @@
 [database]
 provider = "sqlite"
 path = "database/app.db"
+# path can also be frpm .env if defined as:
+# path_end = "VARIABLE_HERE"
 
 [sqlite]
 foreign_keys = true

@@ -1,4 +1,4 @@
-use std::{fs, path::{Path, PathBuf}};
+use std::{env, fs, path::{Path, PathBuf}};
 use crate::database::store_error::StoreError;
 use crate::database::store_result::StoreResult;
 use serde::Deserialize;
@@ -35,6 +35,33 @@ pub enum DatabaseConfig {
         url: Option<String>,
         url_env: Option<String>,
     },
+}
+
+impl DatabaseConfig {
+    pub fn sqlite_path(&self) -> StoreResult<PathBuf> {
+        match self {
+            DatabaseConfig::Sqlite { path, path_env } => {
+                if let Some(path) = path {
+                    return Ok(path.clone());
+                }
+
+                if let Some(env_name) = path_env {
+                    let value = env::var(env_name)
+                        .map_err(|_| StoreError::Env(env_name.clone()))?;
+
+                    return Ok(PathBuf::from(value));
+                }
+
+                Err(StoreError::Config(
+                    "sqlite database requires either `path` or `path_env`".to_string(),
+                ))
+            }
+
+            _ => Err(StoreError::Config(
+                "database provider is not sqlite".to_string(),
+            )),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
