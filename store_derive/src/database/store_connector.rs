@@ -1,6 +1,7 @@
 use rusqlite::{params_from_iter, Connection};
 use std::path::{PathBuf};
 use std::sync::{Arc, Mutex};
+use crate::database::config::{SqliteOptions, StoreConfig};
 use crate::database::store_error::StoreError;
 use crate::database::store_query::StoreQuery;
 use crate::database::store_result::StoreResult;
@@ -30,6 +31,31 @@ impl SqliteStore {
         let conn = self.conn.lock().map_err(|_| StoreError::Thread(String::from("Mutex poisoned")))?;
 
         closure(&conn)
+    }
+
+    pub fn from_config(config: &StoreConfig) -> StoreResult<Self> {
+        let db_path = config.database.sqlite_path()?;
+        let store = Self::new(db_path)?;
+
+        store.apply_sqlite_options(&config.sqlite)?;
+
+        Ok(store)
+    }
+
+    fn apply_sqlite_options(&self, options: &SqliteOptions) -> StoreResult<()> {
+        self.with_connection(|conn| {
+            if options.foreign_keys {
+                conn.execute_batch("PRAGMA foreign_keys = ON;")?;
+            } else {
+                conn.execute_batch("PRAGMA foreign_keys = OFF;")?;
+            }
+
+            conn.execute_batch(&format!("PRAGMA journal_mode = {};", options.journal_mode))?;
+
+            conn.busy_timeout(std::time::Duration::from_millis(options.busy_timeout_ms))?;
+
+            Ok(())
+        })
     }
 
     fn create_connection(db_path: &PathBuf) -> StoreResult<Connection> {
