@@ -4,6 +4,7 @@ pub enum StoreError {
     Io(std::io::Error),
     NotConnected,
     Thread(String),
+    Config(String),
     AlreadyInitialized,
     UnsupportedProvider(String),
 }

@@ -1,0 +1,7 @@
+[database]
+provider = "sqlite"
+path = "database/app.db"
+
+[sqlite]
+foreign_keys = true
+busy_timeout_ms = 5000
