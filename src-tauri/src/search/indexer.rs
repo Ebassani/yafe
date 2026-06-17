@@ -47,6 +47,7 @@ impl GramId {
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Store)]
 pub(crate) struct IndexedEntry {
+    #[store(primary_key)]
     pub(crate) path: String,
     pub(crate) name: String,
     pub(crate) kind: IndexedEntryKind,
