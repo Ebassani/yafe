@@ -3,6 +3,7 @@ pub enum StoreError {
     Sqlite(rusqlite::Error),
     Io(std::io::Error),
     NotConnected,
+    Thread(String),
     AlreadyInitialized,
     UnsupportedProvider(String),
 }
